@@ -15,7 +15,15 @@ export function useHandTracking(){
     useEffect(() => {
         const tracker = new HandTracker()
         trackerRef.current = tracker
-        tracker.init().then(() => setReady(true))
+
+        tracker.init()
+            .then(() => {
+                console.info("MediaPipe HandLandmarker initialisé")
+                setReady(true)
+            })
+            .catch((error) => {
+                console.error("Impossible d'initialiser MediaPipe HandLandmarker", error)
+            })
 
         return () => {
             if (rafRef.current !== null) {
@@ -33,10 +41,15 @@ export function useHandTracking(){
         isLoopRunning.current = true
 
         function loop() {
-            const tracker = trackerRef.current;
-            if (tracker?.isReady()) {
+            const tracker = trackerRef.current
+            if (tracker?.isReady() && video.videoWidth > 0 && video.videoHeight > 0) {
                 const result = tracker.detect(video, performance.now())
-                const detectedLandmarks = result?.landmarks[0] ?? null
+                const detectedLandmarks = result?.landmarks?.[0] ?? null
+                if (detectedLandmarks) {
+                    if (!Array.isArray(detectedLandmarks) || detectedLandmarks.length === 0) {
+                        console.debug("MediaPipe a renvoyé un résultat vide pour la main")
+                    }
+                }
                 setLandmarks(detectedLandmarks)
             }
 

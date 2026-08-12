@@ -16,7 +16,7 @@ export function WebcamFeed({ onVideoReady }: WebcamFeedProps) {
 
         async function startWebcam(){
             stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: 1280, height: 720},
+                video: { width: 1280, height: 720 },
             });
 
             if (videoRef.current){
@@ -39,6 +39,7 @@ export function WebcamFeed({ onVideoReady }: WebcamFeedProps) {
             ref={videoRef}
             className="absolute inset-0 h-full w-full object-cover [transform:scaleX(-1)]"
             muted
+            playsInline
         />
     ) 
 }

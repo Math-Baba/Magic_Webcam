@@ -1,21 +1,29 @@
-// Composant webcam, hook de tracking, et store pour afficher l'état de détection
+// Composants webcam + canvas de tracé, hooks de tracking et de capture de geste, store
 import { WebcamFeed } from "./components/WebcamFeed";
+import { TrackingCanvas } from "./components/TrackingCanvas";
 import { useHandTracking } from "./hooks/useHandTracking";
+import { useGestureCapture } from "./hooks/useGestureCapture";
 import { useHandStore } from "./state/useHandStore";
+import { useGestureStore } from "./state/useGestureStore";
 
 function App() {
   const { ready, startLoop } = useHandTracking();
-  const landmarks = useHandStore((s) => s.landmarks);
   const isDetected = useHandStore((s) => s.isDetected);
+  const pointCount = useGestureStore((s) => s.points.length);
+  const isDrawing = useGestureStore((s) => s.isDrawing);
 
-  // Conteneur plein écran : webcam en fond + overlay de debug en haut à gauche
+  // Active l'écoute des landmarks pour piloter la capture de tracé (poing fermé = validation)
+  useGestureCapture();
+
   return (
     <div className="relative h-screen w-screen bg-black">
       <WebcamFeed onVideoReady={startLoop} />
+      <TrackingCanvas />
       <div className="absolute left-2.5 top-2.5 rounded bg-black/50 px-2 py-2 font-mono text-white">
         MediaPipe: {ready ? "prêt" : "chargement..."} <br />
         Main détectée: {isDetected ? "oui" : "non"} <br />
-        Points: {landmarks?.length ?? 0}
+        Tracé actif: {isDrawing ? "oui" : "non"} <br />
+        Points capturés: {pointCount}
       </div>
     </div>
   );

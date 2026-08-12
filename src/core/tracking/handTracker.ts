@@ -10,6 +10,7 @@ import type { HandDetectionResult } from "./types"
 // Classe qui encapsule le cycle de vie du détecteur Mediapipe
 export class HandTracker {
     private landmarker: HandLandmarker | null = null;
+    private gpuCanvas: HTMLCanvasElement | null = null;
 
     // Initialise le modèle de détection 
     async init(){
@@ -17,27 +18,35 @@ export class HandTracker {
             "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
         );
 
+        this.gpuCanvas = document.createElement("canvas")
+
         const baseOptions = {
             modelAssetPath:
                 "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
             delegate: "GPU" as const,
         };
 
+        const taskOptions = {
+            baseOptions,
+            runningMode: "VIDEO",
+            numHands: 2,
+            minHandDetectionConfidence: 0.3,
+            minHandPresenceConfidence: 0.3,
+            minTrackingConfidence: 0.3,
+            canvas: this.gpuCanvas,
+        } as const;
+
         try {
-            this.landmarker = await HandLandmarker.createFromOptions(vision, {
-                baseOptions,
-                runningMode: "VIDEO",
-                numHands: 2,
-            });
+            this.landmarker = await HandLandmarker.createFromOptions(vision, taskOptions);
         } catch (error) {
             console.warn("MediaPipe GPU init failed, retrying with CPU delegate.", error);
             this.landmarker = await HandLandmarker.createFromOptions(vision, {
+                ...taskOptions,
                 baseOptions: {
                     ...baseOptions,
                     delegate: "CPU",
                 },
-                runningMode: "VIDEO",
-                numHands: 2,
+                canvas: undefined,
             });
         }
     }
