@@ -9,8 +9,10 @@ import { useGestureStore } from "./state/useGestureStore";
 function App() {
   const { ready, startLoop } = useHandTracking();
   const isDetected = useHandStore((s) => s.isDetected);
-  const pointCount = useGestureStore((s) => s.points.length);
-  const isDrawing = useGestureStore((s) => s.isDrawing);
+  const pointCount = useGestureStore((s) =>
+    s.strokes.reduce((sum, st) => sum + st.length, 0)
+  );
+  const isDrawing = useGestureStore((s) => s.phase === "active");
 
   // Active l'écoute des landmarks pour piloter la capture de tracé (poing fermé = validation)
   useGestureCapture();

@@ -1,39 +1,38 @@
-// Import Three.js pour la scène, caméra orthographique et renderer 
-import * as THREE from "three"
+// Three.js core pour la scène et le renderer, transparent pour laisser voir la webcam derrière
+import * as THREE from "three";
 
-// Classe qui encapsule la scène Three.js en overlay 2D par dessus la webcam
+// Classe qui encapsule la scène Three.js de base (le composer bloom est géré à part dans TrackingCanvas)
 export class SceneManager {
-    scene: THREE.Scene;
-    camera: THREE.OrthographicCamera;
-    renderer: THREE.WebGLRenderer;
+  scene: THREE.Scene;
+  camera: THREE.OrthographicCamera;
+  renderer: THREE.WebGLRenderer;
 
-    constructor(canvas: HTMLCanvasElement) {
-        this.scene = new THREE.Scene()
+  constructor(canvas: HTMLCanvasElement) {
+    this.scene = new THREE.Scene();
 
-        // Caméra orthographique en coordonnées normalisées (0-1) pour matcher les landmarks
-        this.camera = new THREE.OrthographicCamera(0, 1, 1, 0, -1, 1)
+    // Caméra orthographique en coordonnées normalisées (0-1), alignée sur les landmarks MediaPipe
+    // left=0, right=1, top=1, bottom=0 pour que Y monte vers le haut dans l'espace de la caméra
+    this.camera = new THREE.OrthographicCamera(0, 1, 1, 0, -1, 1);
 
-        this.renderer = new THREE.WebGLRenderer({
-            canvas,
-            alpha: true, // fond transparent pour voir la webcam derrière
-            antialias: true,
-        })
-        this.renderer.setPixelRatio(window.devicePixelRatio)
-    }
+    this.renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true, // fond transparent : la webcam reste visible derrière le canvas
+      antialias: true,
+    });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // Redimensionne le renderer selon la taille du conteneur
-    resize(width: number, height: number) {
-        this.renderer.setSize(width, height)
-        this.camera.updateProjectionMatrix()
-    }
+    // Tone mapping ACES pour un rendu bloom plus cinématographique
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.1;
+  }
 
-    // Rendu d'une frame
-    render() {
-        this.renderer.render(this.scene, this.camera)
-    }
+  // Redimensionne le renderer selon la taille du conteneur
+  resize(width: number, height: number) {
+    this.renderer.setSize(width, height);
+  }
 
-    // Nettoyage complet du renderer
-    dispose() {
-        this.renderer.dispose()
-    }
+  // Nettoyage complet du renderer
+  dispose() {
+    this.renderer.dispose();
+  }
 }
